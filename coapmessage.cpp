@@ -24,7 +24,6 @@ CoapMessage::CoapMessage(byte type, byte code, char* payload) {
   this->payloadLen = strlen(payload);
   this->payload = (char*)malloc(this->payloadLen);
   strcpy(this->payload, payload);
-
 }
 
 CoapMessage::CoapMessage(byte type, byte code, byte* token, char* payload) {
@@ -95,7 +94,6 @@ CoapMessage::CoapMessage(char* packetBuffer, byte len) {
     if (token == NULL) Serial.println("MEMORY ERROR");
     for (int i=0; i<tokenLen; i++) {
       this->token[i] = (byte)packetBuffer[index++];
-      //mjcoap +1 on randomBytes. This is not the best solution.
     }  
   }else{
     this->token = NULL;
