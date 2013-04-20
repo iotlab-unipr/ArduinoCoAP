@@ -74,9 +74,9 @@ Option* CoapMessage::parseCoapOption(byte prevOptNum, char* buf, byte index) {
 }
 
 void CoapMessage::send(EthernetUDP& Udp, IPAddress address, unsigned int port) {
-  char* packet = this->toBuffer();
+  byte* packet = (byte*)this->toBuffer();
   Udp.beginPacket(address, port);
-  Udp.write(packet);
+  Udp.write(&packet[1], packet[0]);
   Udp.endPacket();
   free(packet);
   packet = NULL;
@@ -95,7 +95,7 @@ CoapMessage::CoapMessage(char* packetBuffer, byte len) {
     if (token == NULL) Serial.println("MEMORY ERROR");
     for (int i=0; i<tokenLen; i++) {
       this->token[i] = (byte)packetBuffer[index++];
-      //Problem when token contains '00'
+      //mjcoap +1 on randomBytes. This is not the best solution.
     }  
   }else{
     this->token = NULL;
@@ -135,7 +135,7 @@ unsigned int CoapMessage::pickMessageId() {
 }
 
 char* CoapMessage::toBuffer() {
-  byte index=0;
+  byte index=1;
   char* buf = (char*)malloc(UDP_TX_PACKET_MAX_SIZE);
   buf[index++] = (char)(((ver&0x3)<<6) | ((type&0x3)<<4) | (tokenLen&0xf));
   buf[index++] = (char)0xff&code;
@@ -146,7 +146,6 @@ char* CoapMessage::toBuffer() {
   if(this->options != NULL) {
     byte prevOptNum = 0;
     for(byte i = 0; i<options->getSize(); i++){
-      Serial.println("AGGIUG MATTUTU!!!");
       Option* opt = options->getOptionAt(i);
       index+=opt->getBytes(prevOptNum, buf, index);
       prevOptNum = opt->getNumber();
@@ -160,6 +159,7 @@ char* CoapMessage::toBuffer() {
       buf[index++]=(char)payload[i];
   }
   buf[index++] = 0;
+  buf[0]=index;
   return buf;
 }
 

@@ -14,17 +14,16 @@
 EthernetUDP Udp;
 dht DHT;
 
-char *ftoa(char *a, double f, int precision)
-{
-long p[] = {0,10,100};
-char *ret = a;
-long heiltal = (long)f;
-itoa(heiltal, a, 10);
-while (*a != '\0') a++;
-*a++ = '.';
-long desimal = abs((long)((f - heiltal) * p[precision]));
-itoa(desimal, a, 10);
-return ret;
+char *ftoa(char *a, double f, int precision) {
+  long p[] = {0,10,100};
+  char *ret = a;
+  long heiltal = (long)f;
+  itoa(heiltal, a, 10);
+  while (*a != '\0') a++;
+  *a++ = '.';
+  long desimal = abs((long)((f - heiltal) * p[precision]));
+  itoa(desimal, a, 10);
+  return ret;
 }
 
 //I DON'T CARE ABOUT ACK
