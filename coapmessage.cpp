@@ -157,7 +157,7 @@ char* CoapMessage::toBuffer() {
       buf[index++]=(char)payload[i];
   }
   buf[index++] = 0;
-  buf[0]=index;
+  buf[0]=index-2;
   return buf;
 }
 

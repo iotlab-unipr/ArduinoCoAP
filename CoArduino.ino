@@ -10,12 +10,17 @@
 #include <dht.h>
 
 #define DEBUG
+#ifdef DEBUG
+  #include <MemoryFree.h>
+#endif
+
 #define DHT22_PIN 7
 EthernetUDP Udp;
 dht DHT;
 
 char *ftoa(char *a, double f, int precision) {
-  long p[] = {0,10,100};
+  long p[] = {
+    0,10,100                              };
   char *ret = a;
   long heiltal = (long)f;
   itoa(heiltal, a, 10);
@@ -38,22 +43,20 @@ char *ftoa(char *a, double f, int precision) {
 
 void onReceivedMessage(CoapMessage* msg) {
   //sendAck(msg);
-  #ifdef DEBUG
-    Serial.println("\n====MESSAGE RECEIVED=====\n");
-    msg->toString();
-  #endif
-  
+#ifdef DEBUG
+  Serial.println("\n====MESSAGE RECEIVED=====\n");
+  msg->toString();
+#endif
+
   byte responseCode;
   double value;
   int chk = DHT.read22(DHT22_PIN);
   if(msg->isRequest()) {
     char* reqService = msg->getOptions()->getOptionByNumber(11)->getValue();
-    if(strcmp(reqService,"temp")==0) {
-      Serial.println("eccolo");
+    if(strcmp(reqService,"temp")==0) 
       value = DHT.temperature;
-    } else if(strcmp(reqService,"humidity")==0) {
+    else if(strcmp(reqService,"humidity")==0) 
       value = DHT.humidity;
-    }
     switch(msg->getCode()) {
     case 1 :
       responseCode = 69;
@@ -74,9 +77,13 @@ void onReceivedMessage(CoapMessage* msg) {
     ftoa(val,value, 2);
     CoapMessage* response = new CoapMessage(2, responseCode, msg->getToken(), val);
     #ifdef DEBUG
-      response->toString();
+    response->toString();
     #endif
     response->send(Udp, msg->getRemoteIPAddr(), msg->getRemotePort());
+    #ifdef DEBUG
+      Serial.print("freeMemory()=");
+      Serial.println(freeMemory());
+    #endif
     if(response != NULL){ 
       delete response;
       response = NULL;
@@ -90,7 +97,8 @@ void onReceivedMessage(CoapMessage* msg) {
 
 void setup() {
   Serial.begin(9600);
-  byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+  byte mac[] = {
+    0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED                               };
   IPAddress ip(192, 168, 1, 102);
   int localPort = 8888;
   Ethernet.begin(mac, ip);
@@ -112,37 +120,55 @@ void setup() {
 void loop() {
   EthernetBonjour.run();
   byte packetSize = Udp.parsePacket();
-  if(packetSize)
-  {
+  if(packetSize) {
     char* packetBuffer = (char*)malloc(packetSize);
-    #ifdef DEBUG
-      Serial.print("Received packet of size ");
-      Serial.println(packetSize);
-      Serial.print("From ");
-      IPAddress remote = Udp.remoteIP();
-      for (int i =0; i < 4; i++)
-      {
-        Serial.print(remote[i], DEC);
-        if (i < 3)
-          Serial.print(".");
-      }
-      Serial.print(", port: ");
-      Serial.println(Udp.remotePort());
-    #endif
+#ifdef DEBUG
+    Serial.print("Received packet of size ");
+    Serial.println(packetSize);
+    Serial.print("From ");
+    IPAddress remote = Udp.remoteIP();
+    for (int i =0; i < 4; i++)
+    {
+      Serial.print(remote[i], DEC);
+      if (i < 3)
+        Serial.print(".");
+    }
+    Serial.print(", port: ");
+    Serial.println(Udp.remotePort());
+#endif
     Udp.read(packetBuffer,packetSize);
     CoapMessage* msg = new CoapMessage(packetBuffer, packetSize);
     msg->setRemoteSocketAddress(Udp.remoteIP(), Udp.remotePort());
     onReceivedMessage(msg);
+    Serial.print("freeMemory()=");
+    Serial.println(freeMemory());
     if(packetBuffer != NULL) {
       free(packetBuffer);
       packetBuffer = NULL;
     }
     delete msg;
     msg = NULL;
-    #ifdef DEBUG
-      Serial.println("\nDeleted\n");
-    #endif
+    Serial.print("freeMemory()=");
+    Serial.println(freeMemory());
+#ifdef DEBUG
+    Serial.println("\nDeleted\n");
+#endif
   }
   delay(10);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
